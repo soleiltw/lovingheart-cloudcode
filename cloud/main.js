@@ -5,6 +5,35 @@ Parse.Cloud.define("hello", function(request, response) {
   response.success("Hello world!");
 });
 
+// Update facebook image
+Parse.Cloud.job("findFacebookImageHttpUrl", function(request, response) {
+	var graphicImage = Parse.Object.extend("GraphicImage");
+	var graphicQuery = new Parse.Query(graphicImage);
+	graphicQuery.find({
+		success: function(results) {
+		
+			var totalCount = 0;
+			
+			for (var index = 0 ; index < results.length; index ++) {
+				var graphicObject = results[index];
+				var graphicUrl = graphicObject.get("imageUrl");
+				if (graphicUrl && graphicUrl.indexOf("http://graph.facebook.com") === 0) {
+					alert("Url need to update: "+graphicUrl);
+					var replaceGrpahicUrl = graphicUrl.replace("http://graph.facebook.com", "https://graph.facebook.com");
+					graphicObject.set("imageUrl", replaceGrpahicUrl);
+/* 					graphicObject.save(); */
+					
+					totalCount++;
+				}
+			}
+			response.success("Http graph url total Count: "+ totalCount);
+		}, 
+		error: function(error) {
+			response.error("Error: " + error.code + " " + error.message);
+		}
+	})
+});
+
 // Update Users stories count
 Parse.Cloud.define("updateUserStoriesCount", function(request, response){
 	var story = Parse.Object.extend("Story");
