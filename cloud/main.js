@@ -34,6 +34,27 @@ Parse.Cloud.job("findFacebookImageHttpUrl", function(request, response) {
 	})
 });
 
+// Update doneCount
+Parse.Cloud.afterSave("Story", function(request) {
+	if (request.object.get("ideaPointer")) {
+		var idea = request.object.get("ideaPointer");
+		var storiesQuery = new Parse.Query("Story");
+		storiesQuery.equalTo("ideaPointer", idea);
+		storiesQuery.count({
+			success: function(count) {
+			// Update count to idea
+			idea.set("doneCount", count);
+			idea.save();	
+			alert("Story saved. With done count: " + count);
+		}, error: function(error) {
+			console.error("Error: " + error.code + " " + error.message);
+		}
+		});
+	} else {
+		alert("Story saved. No idea pointer found.");
+	}
+});
+
 // Update Users stories count
 Parse.Cloud.define("updateUserStoriesCount", function(request, response){
 	var story = Parse.Object.extend("Story");
