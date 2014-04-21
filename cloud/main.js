@@ -1,11 +1,4 @@
-
-// Use Parse.Cloud.define to define as many cloud functions as you want.
-// For example:
-Parse.Cloud.define("hello", function(request, response) {
-  response.success("Hello world!");
-});
-
-// Update facebook image
+// Find if user facebook image is old one
 Parse.Cloud.job("findFacebookImageHttpUrl", function(request, response) {
 	var graphicImage = Parse.Object.extend("GraphicImage");
 	var graphicQuery = new Parse.Query(graphicImage);
@@ -19,10 +12,6 @@ Parse.Cloud.job("findFacebookImageHttpUrl", function(request, response) {
 				var graphicUrl = graphicObject.get("imageUrl");
 				if (graphicUrl && graphicUrl.indexOf("http://graph.facebook.com") === 0) {
 					alert("Url need to update: "+graphicUrl);
-					var replaceGrpahicUrl = graphicUrl.replace("http://graph.facebook.com", "https://graph.facebook.com");
-					graphicObject.set("imageUrl", replaceGrpahicUrl);
-/* 					graphicObject.save(); */
-					
 					totalCount++;
 				}
 			}
@@ -34,7 +23,40 @@ Parse.Cloud.job("findFacebookImageHttpUrl", function(request, response) {
 	})
 });
 
-// Update doneCount
+// Update Story share count
+Parse.Cloud.afterSave("Event", function(request) {
+	if (request.object.get("action") == "share_to_facebook") {
+		
+		var eventQuery = new Parse.Query("Event");
+		eventQuery.include("story");
+		eventQuery.get(request.object.id, {
+			success: function(eventObject) {
+				var storiesQuery = new Parse.Query("Story");
+		var storyObject = eventObject.get("story");
+		
+		var eventCountQuery = new Parse.Query("Event");
+		eventCountQuery.equalTo("story", storyObject);
+		eventCountQuery.count({
+			success: function(count) {
+			// Update count to idea
+			storyObject.set("shareCount", count);
+			storyObject.save();	
+			alert("Story saved. With share count: " + storyObject.get("shareCount"));
+		}, error: function(error) {
+			console.error("Error: " + error.code + " " + error.message);
+		}
+		});
+
+			}, 
+			error:function(error) {
+							console.log("Could not save. " + error.message);
+			}
+		});
+	
+	}
+});
+
+// Update idea doneCount for each user after story share.
 Parse.Cloud.afterSave("Story", function(request) {
 	if (request.object.get("ideaPointer")) {
 		var idea = request.object.get("ideaPointer");
@@ -55,7 +77,7 @@ Parse.Cloud.afterSave("Story", function(request) {
 	}
 });
 
-// Update Users stories count
+// Update Users stories count for user impact
 Parse.Cloud.define("updateUserStoriesCount", function(request, response){
 	var story = Parse.Object.extend("Story");
 	var storiesQuery = new Parse.Query(story);
