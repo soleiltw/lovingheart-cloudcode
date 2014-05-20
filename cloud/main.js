@@ -78,7 +78,7 @@ Parse.Cloud.afterSave("Story", function(request) {
 });
 
 // Update Users stories count for user impact
-Parse.Cloud.define("updateUserStoriesCount", function(request, response){
+Parse.Cloud.define("UpdateUserStoriesCount", function(request, response){
 	var story = Parse.Object.extend("Story");
 	var storiesQuery = new Parse.Query(story);
 	storiesQuery.equalTo("StoryTeller", Parse.User.current());
@@ -102,10 +102,10 @@ Parse.Cloud.define("updateUserStoriesCount", function(request, response){
 						var userImpactObject = new UserImpact();
 						
 						userImpactObject.set("User", Parse.User.current());
-						userImpactObject.set("sharedStoriesCount", results.length);
+						userImpactObject.set("sharedStoriesCount", 1);
 						userImpactObject.save();
 						
-						response.success("Successfully create new user impact with " + results.length + " stories count for " + Parse.User.current().get("name") +".");
+						response.success("Successfully create new user impact with " + 1 + " stories count for " + Parse.User.current().get("name") +".");
 					}
 				}, 
 				error: function(error) {
